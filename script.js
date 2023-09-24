@@ -1,5 +1,5 @@
-let runningTotal = 0;
-let currentNumber = 0;
+let runningTotal = "0"
+let currentNumber = "0";
 
 // NOTE: There is no need to check if the inputs are numbers because they come from button presses
 // Returns the sum of a and b
@@ -50,6 +50,20 @@ function operate(operator, a, b) {
     }
 }
 
+// Displays current number
+function updateCurrentNumber(a) {
+    if (currentNumber === "0") {
+        currentNumber = a;
+    } else {
+        currentNumber += a;
+    }
+    updateDisplay();
+}
+
+function updateOperator(operator) {
+    operate(operator, runningTotal, currentNumber);
+}
+
 function updateDisplay() {
     const runningTotalDisplay = document.querySelector('#running-total');
     runningTotalDisplay.textContent = runningTotal;
@@ -59,11 +73,13 @@ function updateDisplay() {
 }
 
 // Event listeners for calculator buttons
-// const buttons = document.querySelector('.calculator-buttons').querySelectorAll('button');
-// buttons.forEach(button => {
-//     button.addEventListener((e) =>{
+const operatorButtons = document.querySelector('.calculator-buttons')
+    .querySelectorAll('button.operator-button');
+operatorButtons.forEach(button => 
+    button.addEventListener('click', () => updateOperator(button.id)));
 
-//     })
-// })
-
+const numberButtons = document.querySelector('.calculator-buttons')
+    .querySelectorAll('.number-button');
+numberButtons.forEach(button => 
+    button.addEventListener('click', () => updateCurrentNumber(button.textContent)));
 updateDisplay();
