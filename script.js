@@ -1,5 +1,7 @@
-let runningTotal = "0"
+let runningTotal = "0";
 let currentNumber = "0";
+let runningTotalNumber = null;
+let currentOperator = null;
 
 // NOTE: There is no need to check if the inputs are numbers because they come from button presses
 // Returns the sum of a and b
@@ -27,22 +29,21 @@ function divide(a, b) {
 
 // Calls a math function
 function operate(operator, a, b) {
-    let result;
     switch (operator) {
         case "add":
-            result = add(a, b);
+            return add(a, b);
             break;
 
         case "subtract":
-            result = subract(a, b);
+            return subract(a, b);
             break;
 
         case "multiply":
-            result = multiply(a, b);
+            return multiply(a, b);
             break;
 
         case "divide":
-            result = divide(a, b);
+            return divide(a, b);
             break;
 
         default:
@@ -61,9 +62,64 @@ function updateCurrentNumber(a) {
 }
 
 function updateOperator(operator) {
-    operate(operator, runningTotal, currentNumber);
+    // Delete and clear don't depend on current operator and so they are tested separate
+    switch (operator) {
+        case "delete":
+            // Ternary operator ensures that there is always something displayed
+            currentNumber = currentNumber.length == 1 ? "0" : 
+                currentNumber.slice(0, currentNumber.length - 1);
+            updateDisplay();
+            return; // Return here to ensure the if statement below is not checked
+
+        case "clear":
+            currentNumber = "0";
+            runningTotal = "0";
+            runningTotalNumber = null;
+            currentOperator = null;
+            updateDisplay();
+            return; // Return here to ensure the if statement below is not checked
+
+        default:
+            break;
+    }
+
+    // Check remaining operators
+    if (currentOperator === null && currentNumber == 0) {
+        // No operator and no number entered into calculator
+        currentOperator = operator;
+        runningTotal += convertOperator(operator);
+        updateDisplay();
+    } else if (currentOperator === null) {
+        // No operator and there is a number entered
+        runningTotalNumber = Number(currentNumber);
+        runningTotal = currentNumber + convertOperator(operator);
+        currentNumber = "0";
+        currentOperator = operator;
+        updateDisplay();
+    }
 }
 
+// Converts button id to symbol
+function convertOperator(operator) {
+    switch (operator) {
+        case "multiply":
+            return " x ";
+
+        case "divide":
+            return " \u00F7 ";
+
+        case "subtract":
+            return " - ";
+
+        case "add":
+            return " + ";
+
+        default:
+            break;
+    }
+}
+
+// Refreshes the calculator display
 function updateDisplay() {
     const runningTotalDisplay = document.querySelector('#running-total');
     runningTotalDisplay.textContent = runningTotal;
