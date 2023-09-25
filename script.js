@@ -2,11 +2,12 @@ let runningTotal = "0";
 let currentNumber = "0";
 let runningTotalNumber = null;
 let currentOperator = null;
+let evalFlag = false;
 
 // NOTE: There is no need to check if the inputs are numbers because they come from button presses
 // Returns the sum of a and b
 function add(a, b) {
-    return a + b;
+    return Number(a) + Number(b);
 }
 
 // Returns the difference between a and b
@@ -22,7 +23,7 @@ function multiply(a, b) {
 // Returns the quotient of a divided by b (rounded to 5 decimal places)
 function divide(a, b) {
     if (b == 0) {
-        return "&infin; you can't divide by zero silly";
+        return "\u221E You can't divide by zero silly";
     }
     return Math.round((a / b) * 10000) / 10000;
 }
@@ -53,6 +54,15 @@ function operate(operator, a, b) {
 
 // Displays current number
 function updateCurrentNumber(a) {
+    // If the last operation was = move the answer to the top display and reset current number
+    if (evalFlag) {
+        runningTotal = currentNumber;
+        runningTotalNumber = Number(currentNumber);
+        currentNumber = "0";
+        evalFlag = !evalFlag;
+    }
+
+    // Update the current number
     if (currentNumber === "0") {
         currentNumber = a;
     } else {
@@ -81,6 +91,48 @@ function updateOperator(operator) {
 
         default:
             break;
+    }
+
+    // Evaluate (=) is also special, so check it first
+    if (operator == "evaluate") {
+        evalFlag = true;
+        // Display entered equation in display and result in currentNumber
+        switch (currentOperator) {
+            case "multiply":
+                runningTotal += currentNumber + " = ";
+                currentNumber = multiply(runningTotalNumber, currentNumber);
+                runningTotalNumber = Number(currentNumber);
+                updateDisplay();
+                return;
+            case "divide":
+                runningTotal += currentNumber + " = ";
+                currentNumber = divide(runningTotalNumber, currentNumber);
+                if (isNaN(currentNumber)) {
+                    runningTotalNumber = null;
+                } else {
+                    runningTotalNumber = Number(currentNumber);
+                }
+                updateDisplay();
+                return;
+
+            case "add":
+                runningTotal += currentNumber + " = ";
+                currentNumber = add(runningTotalNumber, currentNumber);
+                runningTotalNumber = Number(currentNumber);
+                updateDisplay();
+                return;
+
+            case "subtract":
+                runningTotal += currentNumber + " = ";
+                currentNumber = subract(runningTotalNumber, currentNumber);
+                runningTotalNumber = Number(currentNumber);
+                updateDisplay();
+                return;
+
+            default:
+                // If no operator is set do nothing
+                return;
+        }
     }
 
     // Check remaining operators
