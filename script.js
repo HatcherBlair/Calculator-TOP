@@ -3,6 +3,7 @@ let currentNumber = "0";
 let runningTotalNumber = null;
 let currentOperator = null;
 let evalFlag = false;
+let infinFlag = false;
 
 // NOTE: There is no need to check if the inputs are numbers because they come from button presses
 // Returns the sum of a and b
@@ -23,6 +24,7 @@ function multiply(a, b) {
 // Returns the quotient of a divided by b (rounded to 5 decimal places)
 function divide(a, b) {
     if (b == 0) {
+        infinFlag = true;
         return "\u221E You can't divide by zero silly";
     }
     return Math.round((a / b) * 10000) / 10000;
@@ -59,7 +61,17 @@ function updateCurrentNumber(a) {
         runningTotal = currentNumber;
         runningTotalNumber = Number(currentNumber);
         currentNumber = "0";
+        currentOperator = null;
         evalFlag = !evalFlag;
+    }
+
+    // If the last result was infinity, reset the calculator first
+    if (infinFlag) {
+        runningTotal = "0";
+        runningTotalNumber = null;
+        currentNumber = "0";
+        currentOperator = null;
+        infinFlag = !infinFlag;
     }
 
     // Update the current number
@@ -141,10 +153,17 @@ function updateOperator(operator) {
         currentOperator = operator;
         runningTotal += convertOperator(operator);
         updateDisplay();
-    } else if (currentOperator === null) {
+    } else if (currentOperator === null && !(currentNumber == 0)) {
         // No operator and there is a number entered
         runningTotalNumber = Number(currentNumber);
         runningTotal = currentNumber + convertOperator(operator);
+        currentNumber = "0";
+        currentOperator = operator;
+        updateDisplay();
+    } else {
+        runningTotal = operate(currentOperator, runningTotalNumber, currentNumber);
+        runningTotalNumber = runningTotal;
+        runningTotal += isNaN(runningTotal) ? "" : convertOperator(operator);
         currentNumber = "0";
         currentOperator = operator;
         updateDisplay();
