@@ -70,8 +70,11 @@ function updateCurrentNumber(a) {
         infinFlag = !infinFlag;
     }
 
+    // Don't allow 2 decimals
+    if (a === "." && currentNumber.includes(".")) return;
+
     // Update the current number
-    if (currentNumber === "0") {
+    if (currentNumber === "0" && a !== ".") {
         currentNumber = a;
     } else {
         currentNumber += a;
@@ -241,3 +244,45 @@ const numberButtons = document.querySelector('.calculator-buttons')
     .querySelectorAll('.number-button');
 numberButtons.forEach(button => 
     button.addEventListener('click', () => updateCurrentNumber(button.textContent)));
+
+// Event listeners for keyboard inputs
+document.addEventListener('keyup', (e) => {
+    switch (e.key) {
+        case "-":
+            updateOperator("subtract");
+            break;
+
+        case "=":
+            updateOperator("evaluate");
+            break;
+
+        case "+":
+            updateOperator("add");
+            break;
+
+        case "*":
+            updateOperator("multiply");
+            break;
+
+        case "Backspace":
+            updateOperator("delete");
+            break;
+
+        case "Enter":
+            updateOperator("evaluate");
+            break;
+
+        case ".":
+            updateCurrentNumber(e.key);
+            break;
+
+        case "/":
+            updateOperator("divide");
+            break;
+
+        default:
+            // Handle all number inputs
+            if (!isNaN(e.key)) updateCurrentNumber(e.key);
+            break;
+    }
+});
