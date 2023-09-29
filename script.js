@@ -61,7 +61,6 @@ function updateCurrentNumber(a) {
         runningTotal = currentNumber;
         runningTotalNumber = Number(currentNumber);
         currentNumber = "0";
-        currentOperator = null;
         evalFlag = !evalFlag;
     }
 
@@ -105,17 +104,24 @@ function updateOperator(operator) {
             break;
     }
 
+    // Last operation was an evaluate
+    if (evalFlag) {
+        runningTotal = currentNumber;
+        runningTotalNumber = Number(currentNumber);
+        currentNumber = "0";
+        evalFlag = !evalFlag;
+    }
+
     // Evaluate (=) is also special, so check it first
     if (operator == "evaluate") {
-        evalFlag = true;
         // Display entered equation in display and result in currentNumber
         switch (currentOperator) {
             case "multiply":
                 runningTotal += currentNumber + " = ";
                 currentNumber = multiply(runningTotalNumber, currentNumber);
                 runningTotalNumber = Number(currentNumber);
-                updateDisplay();
-                return;
+                break;
+
             case "divide":
                 runningTotal += currentNumber + " = ";
                 currentNumber = divide(runningTotalNumber, currentNumber);
@@ -124,50 +130,58 @@ function updateOperator(operator) {
                 } else {
                     runningTotalNumber = Number(currentNumber);
                 }
-                updateDisplay();
-                return;
+                break;
 
             case "add":
                 runningTotal += currentNumber + " = ";
                 currentNumber = add(runningTotalNumber, currentNumber);
                 runningTotalNumber = Number(currentNumber);
-                updateDisplay();
-                return;
+                break;
 
             case "subtract":
                 runningTotal += currentNumber + " = ";
                 currentNumber = subract(runningTotalNumber, currentNumber);
                 runningTotalNumber = Number(currentNumber);
-                updateDisplay();
-                return;
-
-            default:
-                // If no operator is set do nothing
-                return;
+                break;
         }
+        updateDisplay();
+        if (currentOperator) {
+            // Reset the operator to prevent calculations being doubled
+            currentOperator = null;
+            // Also set the evalFlag because an evaluate (=) was performed
+            evalFlag = true;
+        }
+        return; // Already handled operator, return here
     }
 
     // Check remaining operators
-    if (currentOperator === null && currentNumber == 0) {
-        // No operator and no number entered into calculator
+    if (currentNumber == 0) { /* !currentNumber does not work because "0" = true */
+        // No number entered into calculator
         currentOperator = operator;
         runningTotal += convertOperator(operator);
-        updateDisplay();
-    } else if (currentOperator === null && !(currentNumber == 0)) {
-        // No operator and there is a number entered
-        runningTotalNumber = Number(currentNumber);
-        runningTotal = currentNumber + convertOperator(operator);
-        currentNumber = "0";
-        currentOperator = operator;
-        updateDisplay();
     } else {
-        runningTotal = operate(currentOperator, runningTotalNumber, currentNumber);
-        runningTotalNumber = runningTotal;
-        runningTotal += isNaN(runningTotal) ? "" : convertOperator(operator);
-        currentNumber = "0";
-        currentOperator = operator;
-        updateDisplay();
+        // There is a number entered
+        if (currentOperator) {
+            // Operation queued
+            runningTotalNumber = operate(currentOperator, runningTotalNumber, currentNumber);
+            runningTotal = runningTotalNumber + convertOperator(operator);
+            currentOperator = operator;
+            currentNumber = "0";
+        } else if (runningTotalNumber) {
+            // No operation queued and there is a running total
+            runningTotalNumber = operate(operator, runningTotalNumber, currentNumber);
+            runningTotal = runningTotalNumber;
+            //currentOperator = null; // Should already be null
+            currentNumber = "0";
+        } else {
+            // No operation queued and no running total
+            runningTotalNumber = Number(currentNumber);
+            runningTotal = runningTotalNumber + convertOperator(operator);
+            currentOperator = operator;
+            currentNumber = "0";
+        }
     }
+    updateDisplay();
 }
 
 // Converts button id to symbol
