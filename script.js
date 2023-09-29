@@ -1,11 +1,12 @@
-let runningTotal = "0";
-let currentNumber = "0";
-let runningTotalNumber = null;
-let currentOperator = null;
-let evalFlag = false;
-let infinFlag = false;
+let runningTotal = "0"; // Top display of calculator
+let runningTotalNumber = null; // Just the number portion of the top display
+let currentNumber = "0"; // Number that user is entering into calculator
+let currentOperator = null; // The operation that is queued
+let evalFlag = false; // True if the last operation was an evaluate (=)
+let infinFlag = false; // True if the last result was infinity
 
-// NOTE: There is no need to check if the inputs are numbers because they come from button presses
+updateDisplay();
+
 // Returns the sum of a and b
 function add(a, b) {
     return Number(a) + Number(b);
@@ -35,19 +36,15 @@ function operate(operator, a, b) {
     switch (operator) {
         case "add":
             return add(a, b);
-            break;
 
         case "subtract":
             return subract(a, b);
-            break;
 
         case "multiply":
             return multiply(a, b);
-            break;
 
         case "divide":
             return divide(a, b);
-            break;
 
         default:
             return "ERROR";
@@ -56,7 +53,7 @@ function operate(operator, a, b) {
 
 // Displays current number
 function updateCurrentNumber(a) {
-    // If the last operation was = move the answer to the top display and reset current number
+    // If the last operation was an evaluate get the calculator ready for another operation
     if (evalFlag) {
         runningTotal = currentNumber;
         runningTotalNumber = Number(currentNumber);
@@ -82,29 +79,50 @@ function updateCurrentNumber(a) {
     updateDisplay();
 }
 
+/* --- Updates the operator being used --- updateOperator(operator)
+ * 
+ * If the operator is delete it will remove the last character from currentNumber,
+ * if currentNumber is zero it will do nothing
+ * 
+ * If the operator is clear it will reset the calculator
+ * 
+ * If the operator is evaluate(=) it will do one of 2 things:
+ *  1: If there is no currentOperator(operator queued) it will return
+ *  2: If there is a currentOperator it will append the currentNumber and " = " to the display,
+ *  and will display the result of that operation in the currentNumber spot
+ * 
+ * If there is no currentOperator(operator queued) it will update the display in one of 3 ways:
+ *  1: If there is not a number in runningTotal, it will move the currentNumber
+ *  to the runningTotal and append the operator to the display.
+ *  2: If there is a number in runningTotal, it will append the operator to the display
+ *  3: If there is no currentNumber it will append the operator to the current number
+ * 
+ * If there is a currentOperator it will perform the calculation and update the display
+ */
 function updateOperator(operator) {
     // Delete and clear don't depend on current operator and so they are tested separate
     switch (operator) {
         case "delete":
+            // Remove the last character from currentNumber
             // Ternary operator ensures that there is always something displayed
             currentNumber = currentNumber.length == 1 ? "0" : 
                 currentNumber.slice(0, currentNumber.length - 1);
             updateDisplay();
-            return; // Return here to ensure the if statement below is not checked
+            return;
 
         case "clear":
+            // Reset the calculator
             currentNumber = "0";
             runningTotal = "0";
             runningTotalNumber = null;
             currentOperator = null;
+            evalFlag = false;
+            infinFlag = false;
             updateDisplay();
-            return; // Return here to ensure the if statement below is not checked
-
-        default:
-            break;
+            return;
     }
 
-    // Last operation was an evaluate
+    // If the last operation was an evaluate get the calculator ready for a new operation
     if (evalFlag) {
         runningTotal = currentNumber;
         runningTotalNumber = Number(currentNumber);
@@ -112,7 +130,7 @@ function updateOperator(operator) {
         evalFlag = !evalFlag;
     }
 
-    // Evaluate (=) is also special, so check it first
+    // Evaluate (=) is also special, so check it before other operations
     if (operator == "evaluate") {
         // Display entered equation in display and result in currentNumber
         switch (currentOperator) {
@@ -125,11 +143,9 @@ function updateOperator(operator) {
             case "divide":
                 runningTotal += currentNumber + " = ";
                 currentNumber = divide(runningTotalNumber, currentNumber);
-                if (isNaN(currentNumber)) {
-                    runningTotalNumber = null;
-                } else {
-                    runningTotalNumber = Number(currentNumber);
-                }
+                // If user divided by zero reset the runningTotalNumber
+                if (isNaN(currentNumber)) runningTotalNumber = null;
+                else runningTotalNumber = Number(currentNumber);
                 break;
 
             case "add":
@@ -155,26 +171,27 @@ function updateOperator(operator) {
     }
 
     // Check remaining operators
-    if (currentNumber == 0) { /* !currentNumber does not work because "0" = true */
+    if (currentNumber == 0 && !currentOperator) { /* !currentNumber does not work because "0" = true */
         // No number entered into calculator
         currentOperator = operator;
         runningTotal += convertOperator(operator);
     } else {
         // There is a number entered
         if (currentOperator) {
-            // Operation queued
+            // Operation queued, perform operation and append new operation
             runningTotalNumber = operate(currentOperator, runningTotalNumber, currentNumber);
             runningTotal = runningTotalNumber + convertOperator(operator);
             currentOperator = operator;
             currentNumber = "0";
         } else if (runningTotalNumber) {
             // No operation queued and there is a running total
+            // Perform operation but don't append another one
             runningTotalNumber = operate(operator, runningTotalNumber, currentNumber);
             runningTotal = runningTotalNumber;
-            //currentOperator = null; // Should already be null
             currentNumber = "0";
         } else {
             // No operation queued and no running total
+            // Move currentNumber to upper display and append operator
             runningTotalNumber = Number(currentNumber);
             runningTotal = runningTotalNumber + convertOperator(operator);
             currentOperator = operator;
@@ -184,7 +201,7 @@ function updateOperator(operator) {
     updateDisplay();
 }
 
-// Converts button id to symbol
+// Converts the operator to a symbol for the display
 function convertOperator(operator) {
     switch (operator) {
         case "multiply":
@@ -204,7 +221,7 @@ function convertOperator(operator) {
     }
 }
 
-// Refreshes the calculator display
+// Set the runningTotal and the currentNumber to their selective divs
 function updateDisplay() {
     const runningTotalDisplay = document.querySelector('#running-total');
     runningTotalDisplay.textContent = runningTotal;
@@ -213,14 +230,14 @@ function updateDisplay() {
     currentNumberDisplay.textContent = currentNumber;
 }
 
-// Event listeners for calculator buttons
+// Event listeners for operator buttons
 const operatorButtons = document.querySelector('.calculator-buttons')
     .querySelectorAll('button.operator-button');
 operatorButtons.forEach(button => 
     button.addEventListener('click', () => updateOperator(button.id)));
 
+// Event listeners for number buttons
 const numberButtons = document.querySelector('.calculator-buttons')
     .querySelectorAll('.number-button');
 numberButtons.forEach(button => 
     button.addEventListener('click', () => updateCurrentNumber(button.textContent)));
-updateDisplay();
