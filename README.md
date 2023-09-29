@@ -1,2 +1,4 @@
 # Calculator-TOP
-Simple calculator webpage
+This is a basic calculator that was made as part of The Odin Project. The calculator allows a user to add, subtract, multiply, or divide numbers. When performing multiple calculations the display is updated as the calculations are entered. Decimal results are rounded to 4 decimal places.  The calculator also supports keyboard input!
+
+There are a lot of different outcomes that can happen when pressing an operator (+, -, x, /) to ensure that the correct calculation occurs and that the display is updated properly.  When a user presses an operator they could be telling the calculator that is the next operation they are going to do, wanting to perform a calculation immediately, or just be clicking stuff for fun.  There are checks to ensure that in any of those three cases, the calculator does what the user is trying to accomplish.  
